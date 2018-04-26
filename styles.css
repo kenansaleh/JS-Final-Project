@@ -1,0 +1,7 @@
+body {
+	background-color: white;
+}
+
+video {
+	transform: rotateY(180deg);
+}
