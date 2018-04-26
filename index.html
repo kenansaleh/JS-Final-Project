@@ -1,49 +1,105 @@
-<!DOCTYPE html>
-<!--
- *  Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
--->
 <html>
-
 <head>
+	<title>Twitch Lite</title>
+    <link type="text/css" rel="stylesheet" href="dir/bootstrap.min.css"/>
+    <link type="text/css" rel="stylesheet" href="dir/styles.css"/>
+    <script type="application/javascript" src="jquery.min.js"></script>
+    <script type="application/javascript" src="dir/bootstrap.min.js"></script>
+    <script type="application/javascript"s src="dir/socket.min.js"></script>
+	<style>
+		body {
+			margin-top:30px;
+		}
 
-    <title>Cis 197 Livestream Application</title>
-
-    <link rel="stylesheet" href="styles.css" />
-
+		#messageArea{
+			display:none;
+		}
+    </style>
 </head>
-
 <body>
+	<div class="container">
+		<div id="streamForm" class="row">
+			<div class="col-md-12">
+				<form id="streamForm">
+					<div class="form-group">
+						<label>Enter Stream Name</label>
+						<input class="form-control" id="streamName"></textarea>
+						<br />
+						<input type="submit" class="btn btn-primary" value="Submit" />
+					</div>
+				</form>
+			</div>
 
-    <h1>Cis 197 Livestream Application</h1>
+		<div id="commentFeed" class="row">
+			<div class="col-md-4">
+				<div class="streamBar">
+					<h3>Online Streams</h3>
+					<ul class="list-group" id="streams"></ul>
+			</div>
+			<div class="col-md-8">
+				<div class="stream" id="stream"></div>
 
-  <div id="videos">
+				<form id="commentForm">
+					<div class="form-group">
+						<video id="hostVideo" autoplay></video>
+						<br />
+						<label>Leave Comment</label>
+						<textarea class="form-control" id="comment"></textarea>
+						<br />
+						<input type="submit" class="btn btn-primary" value="Send Message" />
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
 
-    <video id="localVideo" autoplay></video>
+	<script>
+		$(function() {
+			var socket = io.connect();
+			var $commentForm = $('#commentForm');
+			var $comment = $('#comment');
+			var $chat = $('#chat');
+			var $streamForm = $('#streamForm');
+			var $userFormArea = $('#userFormArea');
+			var $commentArea = $('#commentArea');
+			var $streamName = $('#streamName');
+			var $streams = $('#streams');
+			var $video = $('#hostVideo');
 
-  </div>
+			$messageForm.submit(function(e) { 
+				e.preventDefault();
+				socket.emit('send message', $message.val());
+				$message.val('');
+			});
 
-  <div id="buttons"> 
-    <button id="startButton" onclick="startStream()">Start Streaming</button>
-    <button id="hangupButton" onclick="endStream()">End Stream</button>
-  </div>
+			$userForm.submit(function(e) {
+				e.preventDefault();
+				socket.emit('new user', $username.val(), function (data) {
+					if(data) {
+						$userFormArea.hide();
+						$commentArea.show();
+					}
+				});
+				$username.val('');
+			});
 
-  <div id="commentFeed">
-    <form action="/action_page.php" id="usrform"> Name: <input type="text" name="usrname">
-    <input type="submit">
-    </form>
-  </div>
+			socket.on('get users', function(data) {
+				var html = '';
+				for (i = 1; i < data.length; i++) {
+					html += '<li class="list-group-item">' + data[i] + '</li>'
+				}
+				$streams.html(html);
+			})
 
+			socket.on('new comment', function(data) {
+				$chat.append('<div class="well">' + data.msg + '</div');
+			});
 
-<textarea name="comment" form="usrform">Enter text here...</textarea>
+			socket.on('broadcast stream', function (stream) {
+				$video.src = stream;
 
-  <script type="/socket.io.socket.io.js"></script>
-  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-  <script src="main.js"></script>
-
+			})
+		});
+	</script>
 </body>
-
 </html>
