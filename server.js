@@ -1,54 +1,67 @@
-var express = require('express');
-var app = express();
-var server = require('http').createServer(app);
-var io = require ('socket.io').listen(server);
+const express = require('express');
+const app = express();
+const server = require('http').createServer(app);
+const io = require ('socket.io').listen(server);
+const path = require('path');
 
-var streams = {};
+var streams = [];
+var users = [];
 var connections = [];
 
-var constraints = window.constraints = {
+var constraints = {
 	video: true,
-	audio: false
+	audio: true
 }
 
 server.listen(process.env.PORT || 3000);
 console.log('Server runnnig on port: 3000');
 
-app.use(express.static('dir'));
+app.use(express.static(path.join(__dirname, 'dir')));
 
 app.get('/', function (req, res) {
 	res.sendFile(__dirname + '/index.html');
 });
 
-io.sockets.on('connection', function(socket) {
+io.on('connection', function (socket) {
 	connections.push(socket);
 
 	socket.on('disconnect', function (data) {
 		if (!socket.streamName) return;
-		streams.splice(strams.indexOf(socket.streamName), 1)
+		streams.push(socket.streamName);
 		updateStreams();
 
 		connections.splice(connections.indexOf(socket, 1));
 	});
 
-	socket.on('send comment', function (data) {
-		io.sockets.emit('new comment', {comment: data});
-	})
-
-	socket.on('new stream', function (data, cb) {
-		callback(true);
-		socket.streamName = data;
-		users.push(socket.streamName);
+	socket.on('new user', function (data, cb) {
+		cb(true);
+		socket.username = data;
+		users.push(socket.username);
 		updateStreams();
 	})
 
+	socket.on('send comment', function (data) {
+		io.emit('new comment', {comment: data});
+	})
+
+	socket.on('new stream', function (data, cb) {
+		cb(true);
+		socket.streamName = data;
+		streams.push(socket.streamName);
+		updateStreams();
+	})
+
+	socket.on('broadcast stream', function () {
+		beginStream();
+	})
+
 	function updateStreams() {
-		io.sockets.emit('get streams', streams)
+		io.emit('get streams', streams);
 	}
 
 	function handleSuccess(stream) {
       window.stream = stream;
-      io.sockets.emit('broadcast stream', stream)
+      io.sockets.emit('show stream', stream)
       localVideo.srcObject = stream;
     }
 
@@ -56,7 +69,7 @@ io.sockets.on('connection', function(socket) {
       console.log('getUserMedia error: ' + error.name, error);
     }
 
-	function beginStream {
+	function beginStream () {
 		navigator.mediaDevices.getUserMedia(constraints).then(successStream).catch(errorStream);
 	}
 });

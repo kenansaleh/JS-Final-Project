@@ -9,7 +9,8 @@
   "author": "Kenan Saleh",
   "license": "ISC",
   "dependencies": {
+    "express": "*",
     "socket.io": "*",
-    "express": "*"
+    "webrtc": "^1.14.1"
   }
 }

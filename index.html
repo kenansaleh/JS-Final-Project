@@ -1,95 +1,92 @@
 <html>
 <head>
 	<title>Twitch Lite</title>
-    <link type="text/css" rel="stylesheet" href="dir/bootstrap.min.css"/>
-    <link type="text/css" rel="stylesheet" href="dir/styles.css"/>
+    <link type="text/css" rel="stylesheet" href="bootstrap.min.css"/>
+    <link type="text/css" rel="stylesheet" href="styles.css"/>
     <script type="application/javascript" src="jquery.min.js"></script>
-    <script type="application/javascript" src="dir/bootstrap.min.js"></script>
-    <script type="application/javascript"s src="dir/socket.min.js"></script>
+    <script type="application/javascript" src="bootstrap.min.js"></script>
+    <script type="application/javascript" src="socket.min.js"></script>
+    <script src="server.js"></script>
+
 	<style>
 		body {
 			margin-top:30px;
 		}
 
-		#messageArea{
+		#commentFeed{
+			display:none;
+		}
+		#streamFormArea{
+			display:none;
+		}
+		#availStreams{
 			display:none;
 		}
     </style>
 </head>
-<body>
-	<div class="container">
-		<div id="streamForm" class="row">
-			<div class="col-md-12">
-				<form id="streamForm">
-					<div class="form-group">
-						<label>Enter Stream Name</label>
-						<input class="form-control" id="streamName"></textarea>
-						<br />
-						<input type="submit" class="btn btn-primary" value="Submit" />
-					</div>
-				</form>
-			</div>
 
-		<div id="commentFeed" class="row">
-			<div class="col-md-4">
-				<div class="streamBar">
-					<h3>Online Streams</h3>
-					<ul class="list-group" id="streams"></ul>
-			</div>
-			<div class="col-md-8">
-				<div class="stream" id="stream"></div>
-
-				<form id="commentForm">
-					<div class="form-group">
-						<video id="hostVideo" autoplay></video>
-						<br />
-						<label>Leave Comment</label>
-						<textarea class="form-control" id="comment"></textarea>
-						<br />
-						<input type="submit" class="btn btn-primary" value="Send Message" />
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
-
-	<script>
+    <script>
 		$(function() {
 			var socket = io.connect();
 			var $commentForm = $('#commentForm');
 			var $comment = $('#comment');
 			var $chat = $('#chat');
 			var $streamForm = $('#streamForm');
-			var $userFormArea = $('#userFormArea');
-			var $commentArea = $('#commentArea');
+			var $streamFormArea = $('#streamFormArea');
+			var $commentFeed = $('#commentFeed');
 			var $streamName = $('#streamName');
 			var $streams = $('#streams');
 			var $video = $('#hostVideo');
 
-			$messageForm.submit(function(e) { 
-				e.preventDefault();
-				socket.emit('send message', $message.val());
-				$message.val('');
-			});
+			var $userForm = $('#userForm');
+			var $userFormArea = $('#userFormArea');
+			var $username = $('#userName');
+			var $availStreams = $('#availStreams');
+
+			var $chatRoom0 = $('#chatRoom0');
+			var $chatRoom1 = $('#chatRoom1');
+
+			//$chatRoom0.submit
 
 			$userForm.submit(function(e) {
 				e.preventDefault();
 				socket.emit('new user', $username.val(), function (data) {
-					if(data) {
+					if (data) {
 						$userFormArea.hide();
-						$commentArea.show();
+						//$commentFeed.show();
+						$streamFormArea.show();
+						$availStreams.show();
+
 					}
 				});
 				$username.val('');
 			});
 
-			socket.on('get users', function(data) {
+			$commentForm.submit(function(e) { 
+				e.preventDefault();
+				socket.emit('send comment', $comment.val());
+				$comment.val('');
+			});
+
+			$streamForm.submit(function(e) {
+				e.preventDefault();
+				socket.emit('new stream', $streamName.val(), function (data) {
+					if (data) {
+						$streamFormArea.hide();
+						//$commentFeed.show();
+					}
+				});
+				$streamName.val('');
+			});
+
+			socket.on('get streams', function(data) {
 				var html = '';
-				for (i = 1; i < data.length; i++) {
-					html += '<li class="list-group-item">' + data[i] + '</li>'
+				for (var i = 0; i < data.length; i++) {
+					html += '<button class="chatRoom' + i + '">' + data[i] + '</button>'
+					//html += ''
 				}
 				$streams.html(html);
-			})
+			});
 
 			socket.on('new comment', function(data) {
 				$chat.append('<div class="well">' + data.msg + '</div');
@@ -98,8 +95,57 @@
 			socket.on('broadcast stream', function (stream) {
 				$video.src = stream;
 
-			})
+			});
 		});
 	</script>
+
+<body>
+	<div class="container">
+		<div id="userFormArea" class="row">
+			<div class="col-md-12">
+				<form id="userForm">
+					<div class="form-group">
+						<label>Enter Username</label>
+						<input class="form-control" id="userName"></textarea>
+						<br />
+						<input type="submit" class="btn btn-primary" value="Login" />
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<div id="streamFormArea" class="row">
+			<div class="col-md-12">
+				<form id="streamForm">
+					<div class="form-group">
+						<label>Enter Stream Name</label>
+						<input class="form-control" id="streamName"></textarea>
+						<br />
+						<input type="submit" class="btn btn-primary" value="Create Stream" />
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<div id = "availStreams" class="col-md-4">
+			<div class="streamBar">
+				<h3>Online Streams</h3>
+				<ul class="list-group" id="streams"></ul>
+			</div>
+		</div>
+
+		<div id="commentFeed" class="row">
+			<form id="commentForm">
+				<div class="form-group">
+					<video id="hostVideo" autoplay></video>
+					<br />
+					<label>Leave Comment</label>
+					<textarea class="form-control" id="comment"></textarea>
+					<br />
+					<input type="submit" class="btn btn-primary" value="Send Message" />
+				</div>
+			</form>
+		</div>
+	</div>
 </body>
 </html>
