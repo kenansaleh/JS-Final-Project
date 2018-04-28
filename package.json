@@ -1,16 +1,20 @@
 {
-  "name": "chatapp",
-  "version": "1.0.0",
-  "description": "Cis 197 Final Project",
-  "main": "server.js",
+  "name": "easyrtc_server_example",
+  "version": "0.1.6",
+  "author": "Priologic Software Inc. <info@priologic.com> (http://priologic.com/)",
+  "description": "Simple EasyRTC server example which includes EasyRTC, Express, and Socket.io",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "author": "Kenan Saleh",
-  "license": "ISC",
   "dependencies": {
-    "express": "*",
-    "socket.io": "*",
-    "webrtc": "^1.14.1"
+    "easyrtc": "^1.1.0",
+    "express": "^4.10.7",
+    "serve-static": "^1.8.0",
+    "socket.io": "^1.4.5"
+  },
+  "license": "BSD2",
+  "engines": {
+    "node": ">=0.8"
   }
 }
